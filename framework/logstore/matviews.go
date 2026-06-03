@@ -219,9 +219,9 @@ var filterMatViews = []filterMatViewDef{
 		requiredColumns: append([]string{"id", "name"}, scopeRequiredColumns...),
 	},
 	{
-		name:       "mv_filter_users",
-		selectExpr: "user_id AS id, user_name AS name, " + scopeProjection,
-		whereExpr:  "user_id IS NOT NULL AND user_id != '' AND user_name IS NOT NULL AND user_name != ''",
+		name:            "mv_filter_users",
+		selectExpr:      "user_id AS id, user_name AS name, " + scopeProjection,
+		whereExpr:       "user_id IS NOT NULL AND user_id != '' AND user_name IS NOT NULL AND user_name != ''",
 		uniqueIdx:       "id, name, " + scopeIdxColumns,
 		requiredColumns: append([]string{"id", "name"}, scopeRequiredColumns...),
 	},
@@ -242,7 +242,7 @@ var filterMatViewKeyPairColumns = map[[2]string]string{
 	{"routing_rule_id", "routing_rule_name"}:   "mv_filter_routing_rules",
 	{"team_id", "team_name"}:                   "mv_filter_teams",
 	{"customer_id", "customer_name"}:           "mv_filter_customers",
-	{"user_id", "user_name"}:                    "mv_filter_users",
+	{"user_id", "user_name"}:                   "mv_filter_users",
 	{"business_unit_id", "business_unit_name"}: "mv_filter_business_units",
 }
 
@@ -736,7 +736,9 @@ func canUseMatViewFilters(f SearchFilters) bool {
 		f.MinTokens == nil && f.MaxTokens == nil &&
 		f.MinCost == nil && f.MaxCost == nil &&
 		!f.MissingCostOnly &&
-		len(f.CacheHitTypes) == 0
+		len(f.CacheHitTypes) == 0 &&
+		len(f.TeamIDs) == 0 &&
+		len(f.BusinessUnitIDs) == 0
 }
 
 // canUseMatView checks both that materialized views are ready (created and
@@ -1738,10 +1740,10 @@ func (s *RDBLogStore) getDimensionRankingsFromMatView(ctx context.Context, filte
 	}
 
 	type row struct {
-		ID         string  `gorm:"column:id"`
-		Total      int64   `gorm:"column:total"`
-		TotalTkns  int64   `gorm:"column:total_tkns"`
-		TotalCost  float64 `gorm:"column:total_cost"`
+		ID        string  `gorm:"column:id"`
+		Total     int64   `gorm:"column:total"`
+		TotalTkns int64   `gorm:"column:total_tkns"`
+		TotalCost float64 `gorm:"column:total_cost"`
 	}
 
 	var results []row
