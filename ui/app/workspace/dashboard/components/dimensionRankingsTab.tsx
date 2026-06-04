@@ -114,9 +114,9 @@ function TopDimensionChart({
 									}}
 									tickLine={false}
 									axisLine={false}
-									width={92}
+									width={100}
 								/>
-								<Tooltip content={<TopDimensionTooltip />} />
+								<Tooltip content={<TopDimensionTooltip />} cursor={{ fill: "#8c8c8f", fillOpacity: 0.15 }} />
 								<Bar
 									dataKey="total_requests"
 									isAnimationActive={false}
