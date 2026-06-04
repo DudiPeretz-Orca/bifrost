@@ -396,8 +396,21 @@ func (s *BifrostHTTPServer) ReloadVirtualKey(ctx context.Context, id string) (*t
 	if mcs, err := s.Config.ConfigStore.GetModelConfigsByScopeAndScopeIDs(
 		ctx, tables.ModelConfigScopeVirtualKey, []string{id},
 	); err == nil {
+		store := governancePlugin.GetGovernanceStore()
+		// Snapshot in-memory VK-scoped config IDs before the upserts so we can
+		// evict the ones that no longer exist in the DB (e.g. a standalone VK
+		// adopted into an access profile has its VK-scoped governance model
+		// configs deleted). Without this their stale budgets keep enforcing.
+		staleIDs := make(map[string]bool)
+		for _, mcID := range store.ScopedModelConfigIDs(tables.ModelConfigScopeVirtualKey, id) {
+			staleIDs[mcID] = true
+		}
 		for i := range mcs {
-			governancePlugin.GetGovernanceStore().UpdateModelConfigInMemory(ctx, &mcs[i])
+			delete(staleIDs, mcs[i].ID)
+			store.UpdateModelConfigInMemory(ctx, &mcs[i])
+		}
+		for mcID := range staleIDs {
+			store.DeleteModelConfigInMemory(ctx, mcID)
 		}
 	}
 	s.MCPServerHandler.SyncVKMCPServer(virtualKey)
